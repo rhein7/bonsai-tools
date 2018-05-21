@@ -1,0 +1,658 @@
+<html lang="de">
+
+<head>
+    <meta charset="utf-8">
+    <title>Bonsai-Tools</title>
+    <link rel="stylesheet" href="particles.css" />
+    <link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+    <script type='text/javascript' src='jquery.particleground.js'></script>
+    <script type='text/javascript' src='particles.js'></script>
+    <style>
+        .monaco-editor .monaco-scrollable-element .scrollbar.vertical {
+            visibility: hidden;
+        }
+        
+        .syntaxFehler {
+            background: red;
+            width: 10px !important;
+            left: 10px !important;
+        }
+        
+        .currentLineDeko {
+            background-color: red !important;
+        }
+        
+        .standardLineDeko {
+            background-color: #1e1e1e !important;
+        }
+    </style>
+
+
+    <body>
+        <a href="https://github.com/rhein7"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67"
+                alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
+        <a href="https://www.dibaku.de"><img style="position: fixed; top: 0; left: 0; border: 0;" src="moreOnDibakuBanner.png" alt="dibaku.de"></a>
+
+        <div class="fixed-action-btn">
+            <a class="btn-floating btn-large tooltipped grey darken-2" data-position="left" data-delay="10" data-tooltip="Navigation">
+                <i class="large material-icons">more_vert</i>
+            </a>
+            <ul>
+                <li><a onclick="document.getElementById( 'particles' ).scrollIntoView({behavior: 'smooth' });" data-position="left" data-delay="10" data-tooltip="Startseite" class="tooltipped btn-floating grey"><i class="material-icons">arrow_upward</i></a></li>
+                <li><a onclick="document.getElementById( 'mainWebApp' ).scrollIntoView({behavior: 'smooth' });" data-position="left" data-delay="10" data-tooltip="Webapp" class="tooltipped btn-floating grey darken-1"><i class="material-icons">dashboard</i></a></li>
+                <li><a onclick="document.getElementById( 'mainDocumentation' ).scrollIntoView({behavior: 'smooth' });" data-position="left" data-delay="10" data-tooltip="Dokumentation" class="tooltipped btn-floating grey darken-2"><i class="material-icons">description</i></a></li>
+                <li><a onclick="document.getElementById( 'mainExamples' ).scrollIntoView({behavior: 'smooth' });" data-position="left" data-delay="10" data-tooltip="Beispielprogramme" class="tooltipped btn-floating grey darken-3"><i class="material-icons">code</i></a></li>
+                <li><a onclick="document.getElementById( 'mainAbout' ).scrollIntoView({behavior: 'smooth' });" data-position="left" data-delay="10" data-tooltip="Über das Projekt" class="tooltipped btn-floating grey darken-4"><i class="material-icons">info_outline</i></a></li>
+            </ul>
+        </div>
+        <div id="modal1" class="modal grey darken-4 white-text center-align">
+            <div class="modal-content">
+                <h4>Wert &auml;ndern</h4>
+                <p class="flow-text"><b>Wert f&uuml;r den Speicher mit der Adresse <b id="m1_text">X</b> angeben:</b><br>(Die Zahl muss in einem Byte gespeichert werden k&ouml;nnen. Dazu muss ihr Wert zwischen 0 und 2<sup>8</sup> - 1 (255) liegen.)</p>
+                <div class="input-field">
+                    <input id="m1_input" onfocus="this.select();" type="number" min="0" max="255" class="validate" style="font-size:40px; width:20%;">
+                </div>
+
+            </div>
+            <div class="modal-footer grey darken-4">
+                <a onclick="writeVal();" class="waves-effect btn-flat grey darken-3 white-text center-align" style="width:100%;">Wert speichern</a>
+            </div>
+        </div>
+
+        <div id="modal2" class="modal grey darken-4 white-text center-align" style="overflow-y: hidden;">
+            <div id="showAssemblerStep" class="modal-content center-align">
+
+            </div>
+            <div class="modal-footer grey darken-4">
+                <a onclick="assembleNextStep();" class="waves-effect btn-flat grey darken-3 white-text center-align" style="width:100%;margin-top:0px;">N&auml;chster Schritt</a>
+            </div>
+        </div>
+
+        <input style="display:none;" id="uploadInput" type="file" accept=".txt" name="myFiles" onchange="readFile(this);">
+
+        <div id="particles">
+            <div id="intro">
+                <h1>BONSAI - Tools</h1>
+                <div class="container">
+                    <p>ist eine intuitiv zu bedienende und m&auml;chtige Webapp zum Entwickeln, Kompilieren, Simulieren und Konvertieren von Bonsai-Assembler-Code.</p>
+                    <div class="row">
+                        <div class="col s4">
+                            <a onclick="document.getElementById( 'mainAbout' ).scrollIntoView({behavior: 'smooth' });" class="btn btn-large grey darken-2 white-text waves-effect waves-light" style="width:100%;">&Uuml;ber das Projekt</a>
+                        </div>
+                        <div class="col s4">
+                            <a onclick="document.getElementById( 'mainWebApp' ).scrollIntoView({behavior: 'smooth' });" class="btn btn-large grey darken-2 white-text waves-effect waves-light" style="width:100%;">Zur Webapp</a>
+                        </div>
+                        <div class="col s4">
+                            <a onclick="document.getElementById( 'mainDocumentation' ).scrollIntoView({behavior: 'smooth' });" class="btn btn-large grey darken-2 white-text waves-effect waves-light" style="width:100%;">Dokumentation</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <br><br>
+
+        <style>
+            body {
+                background: #bbb;
+                /* For browsers that do not support gradients */
+                background: -webkit-linear-gradient(#bbb, white);
+                /* For Safari 5.1 to 6.0 */
+                background: -o-linear-gradient(#bbb, white);
+                /* For Opera 11.1 to 12.0 */
+                background: -moz-linear-gradient(#bbb, white);
+                /* For Firefox 3.6 to 15 */
+                background: linear-gradient(#bbb, white);
+                /* Standard syntax */
+                background-attachment: fixed;
+                height: 100%;
+            }
+        </style>
+        <div id="mainWebApp" class="container">
+            <div class="row" style="padding-top:5px;">
+                <h3>Simulator</h3>
+                <div class="col s4">
+                    <div onwheel="return false;" class="card-panel grey darken-4 z-depth-5 white-text" style="padding:0px; padding-top:5px; visibility:hidden;">
+                        <h5 class="center-align">Programm:</h5>
+                        <div id="editor" style="width:100%; height:70%;overflow: hidden;"></div>
+                        <script src="monaco-editor/min/vs/loader.js"></script>
+                        <script src="editor.js"></script>
+                        <p id="compilerState" class="green-text center-align" style="margin-top:0px;"></p>
+
+                    </div>
+                </div>
+                <div class="col s4">
+                    <div class="card-panel grey darken-4 z-depth-5 white-text" style="padding-top:5px; padding-bottom:1px;visibility:hidden;">
+                        <h5 class="center-align">Daten:</h5>
+                        <div id="datensatz">
+                            <span onclick="changeVal(this);" id="data_0" class="flow-text datensatzelement" style="cursor:pointer;"><i id="data_0_ad">0</i> : <b id="data_0_val">9</b></span><br>
+                        </div>
+                        <button onclick="addData();" class="btn grey darken-3 waves-effect light-waves" style="width:100%;">+</button>
+                        <p onclick="resetData();" class="red-text center-align" style="font-size:15px; margin-top: 10px; cursor:pointer;">Zur&uuml;cksetzen</p>
+
+                    </div>
+                    <div class="card-panel grey darken-4 z-depth-5 white-text center-align" style="padding-top:5px;padding-bottom:3px;visibility:hidden;">
+                        <h5 class="center-align">Speichern/Laden</h5>
+                        <div class="row">
+                            <div class="col s4">
+                                <i style="cursor:pointer;" onclick="saveToFile();" class="material-icons medium">save</i>
+                                <span style="font-size:15px;">Speichern</span>
+                            </div>
+                            <div class="col s4">
+                                <i style="cursor:pointer;" onclick="$('#uploadInput').click();" class="material-icons medium">folder_open</i>
+                                <span style="font-size:15px;">&Ouml;ffnen</span>
+                            </div>
+                            <div class="col s4">
+                                <i style="cursor:pointer;" onclick="btn_delete();" class="material-icons medium">delete</i>
+                                <span style="font-size:15px;">L&ouml;schen</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="col s4">
+                    <div class="card-panel grey darken-4 z-depth-5 white-text center-align" style="padding-top:5px;visibility:hidden;">
+                        <h5 class="center-align">Aktionen:</h5>
+                        <button id="btn_compile" class="btn blue waves-effect" onclick="compileProg(false);" style="width:100%;">Kompilieren</button><br>
+                        <i class="material-icons medium">arrow_downward</i>
+
+                        <button id="btn_run" class="btn grey waves-effect" style="width:100%;" onclick="btnRun();">Ausf&uuml;hren</button><br>
+
+
+                        <i class="material-icons medium">arrow_downward</i>
+                        <button id="btn_assemble" class="btn grey waves-effect" style="width:100%;" onclick="btnAssemble();">Maschinencode</button><br>
+                    </div>
+                    <div class="card-panel grey darken-4 z-depth-5 white-text center-align" style="padding-top:5px; padding-bottom:0px;visibility:hidden;">
+                        <h5 class="center-align">Geschwindigkeit:</h5>
+
+                        <p class="range-field">
+                            <input style="border-style: none;" type="range" id="range_speed" min="0" max="2000" step="100" />
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br><br>
+        <div class="container" id="mainDocumentation">
+            <h2>Dokumentation</h2>
+            <h4>Code entwickeln</h4>
+            <p class="flow-text">Im "Programm"-Block der Webapp befindet sich der Monaco-Editor, ein sehr umfangreicher Online-Code-Editor, der mit Syntaxhighlighting für Bonsai-Assembler ausgestattet wurde. Zusammen mit dem "Daten"-Block lassen sich so bereits beliebige
+                Programme realisieren.</p>
+            <h4>Der Daten-Block</h4>
+            <p class="flow-text">Im "Daten"-Block lassen sich durch Klicks auf den "+" Button beliebig viele Speicherplätze mit festgelegter Adresse hinzufügen. Deren Wert kann durch einen einfachen Klick auf die jeweilige Adresse manipuliert werden. Dadurch, dass beim Bonsai-Lehrcomputer
+                der Wert eines Speicherplatzes auf einen Byte beschränkt ist, muss der eingegebene Wert zwischen 0 = (00000000)<sub>2</sub> und 2<sup>8</sup>-1 = 255 = (11111111)<sub>2</sub> liegen. Der rote Link "Zurücksetzen" entfernt alle Speicherplätze
+                bis auf den mit der Adresse 0. Diesem wird der Wert 0 zugewiesen.<br> Die Befehle um mit den Daten zu interagieren finden Sie in diesem Abschnitt.</p>
+            <h4>Der "Speichern/Laden"-Block</h4>
+            <p class="flow-text">Der Block mit der Bezeichnung "Speichern/Laden" ist selbsterklärend. Die Speicher-Funktion ermöglicht es den aktuellen Inhalt des Editors herunterzuladen und zu speichern. Nach diesem Prinzip erstellte Daten können mit der Schaltfläche "Öffnen"
+                wieder in den Editor geladen werden. Mit "Löschen" werden alle Speicherplätze und der Inhalt des Editors zurückgesetzt.</p>
+            <h4>Kompilieren (F3)</h4>
+            <p class="flow-text">Im Block mit der Bezeichnung "Aktionen" befinden sich die Schaltflächen, die die drei Hauptfunktionen der App steuern:<br><b>KOMPILIEREN</b> bezeichnet das Umwandeln der für Menschen lesbaren Befehle in Maschinencode. Dieser Vorgang muss vor
+                dem Ausführen durchlaufen werden, um unter Anderem absehbare Fehler im Programmcode erkennen und ausgeben zu können.<br><br> Die <b>Statusanzeige</b> des Compilers finden Sie im "Programm"-Block unter dem Editor. Sollten während des Kompilierens
+                keine Fehler gefunden werden, wird dies in der Statusanzeige ausgegeben und die Buttons "Ausführen" und "Maschinencode" werden aktiviert. Werden Fehler gefunden, werden diese inklusive Zeilenangabe angezeigt und das Kompilieren wird unterbrochen.
+                <br><br>Mögliche <b>Fehler</b> sind Typos bei den Befehlen, der Zugriff auf Speicherplätze mit falscher Adresse und das Einfügen von Leerzeilen innerhalb des Codes, die der Bonsai-Computer nicht verarbeiten kann.<br><br>Bitte beachten
+                Sie, dass Sie nach jeder Änderung am Code Ihr Programm neu kompilieren müssen! Um Zeit zu sparen, kann das Kompilieren auch mit der <b>F3-Taste</b> gestartet werden.</p>
+            <h4>Ausführen (F4)</h4>
+            <p class="flow-text">Nachdem das Kompilieren ohne Fehler beendet wurde, wird der Button <b>Ausführen</b> aktiv. Mit diesem können Sie die Bonsai-Simulation starten, in der Ihr Programm Befehl für Befehl abgearbeitet wird. Dies lässt sich in Echtzeit nachverfolgen,
+                da in der Statusanzeige des Compilers angezeigt wird, welche Zeile momentan bearbeitet wird. Diese wird auch genutzt, um Fehler anzuzeigen, die während der Laufzeit des Programmes entstehen (beispielsweise beim Dekrementieren eines Speicherplatzes
+                mit dem Wert 0).</p>
+            <h4>Der Button "Maschinencode"</h4>
+            <p class="flow-text">Die Funktion hinter dem Button mit der Aufschrift <b>Maschinencode</b> ist das Herzstück der App. Nach dem Klick auf den Button wird das komplette Programm in der für den Bonsai-Computer verständlichen binären Assemblersprache angezeigt.<br>Um
+                das Eingeben dieser Befehle in den Speicher des Bonsai-Computers noch weiter zu vereinfachen, gibt es die Möglichkeit, sich jeden Befehl einzeln inklusive "An/Aus-Grafik" anzeigen zu lassen. Durch diese Funktion wird das Programmieren
+                des Bonsais zum Kinderspiel.</p>
+            <h4>Einstellen der Geschwindigkeit</h4>
+            <p class="flow-text">Das Abarbeiten eines Programmes wird standardmäßig mit der Geschwindigkeit <b>1 Befehl pro Sekunde</b> vollzogen. Mit dem Schieberegler im Block <b>Geschwindigkeit</b> lässt sich ein Multiplikator für diese einstellen. Dabei gilt es zu beachten,
+                dass das Programm bei der höchsten Einstellung (ganz rechts) so schnell wie möglich abgearbeitet wird.</p>
+        </div>
+        <div class="container" id="mainExamples">
+            <h2>Beispielprogramme</h2>
+            <h4>Addition</h4>
+            <h4>Subtraktion</h4>
+            <h4>Multiplikation</h4>
+            <h4>Division</h4>
+        </div>
+
+        <div class="container" id="mainAbout">
+            <h2>Über das Projekt</h2>
+            <h4>Github</h4>
+            <p class="flow-text">Helfen Sie jetzt Bonsai-Tools zu verbessern: github.com/rhein7</p>
+            <h4>Weitere Projekte</h4>
+            <p class="flow-text">Weitere meiner Projekte finden Sie auf www.dibaku.de und auf GitHub!</p>
+            <h4>Kontakt</h4>
+            <p class="flow-text">Über Kritik oder Anregung würde ich mich sehr freuen! Sie erreichen mich über GitHub oder per Mail an jan.hillesheim@dibaku.de</p>
+        </div>
+        <script>
+            $(document).ready(function() {
+                $('.modal').modal({
+                    complete: function() {
+                        assembledCodeIndex = -1;
+                    }
+                });
+                $("#range_speed").val(200);
+                alert("Diese Seite ist NICHT FERTIG, der Simulator kann jedoch schon verwendet werden!")
+            });
+            $("body").keypress(function(e) {
+                if (assembledCodeIndex != -1 && (e.which == 32 || e.which == 13)) {
+                    e.preventDefault();
+                    assembleNextStep();
+
+                }
+            });
+            var befehle = ["inc", "dec", "tst", "jmp"];
+            var datensatzIndex = 0;
+            var mainProg = [];
+            var prog = [];
+            var progIndex;
+            var running = false;
+            var assembledCode = [];
+            var assembledCodeIndex = -1;
+
+            function btn_delete() {
+                location.reload();
+            }
+
+            function resetData() {
+                $("#datensatz").html('<span onclick="changeVal(this);" id="data_0" class="flow-text datensatzelement" style="cursor:pointer;"><i id="data_0_ad">0</i> : <b id="data_0_val">0</b></span><br>');
+                datensatzIndex = 0;
+            }
+
+            function readFile(element) {
+                var selectedFile = element.files[0]
+                var fr = new FileReader();
+                fr.onload = function() {
+                    processFile(fr.result);
+                }
+                fr.readAsText(selectedFile, "utf8");
+            }
+
+            function processFile(text) {
+                data = text.split("\n");
+                var forEditor = "";
+                for (var i = 0; i < data.length; i++) {
+                    if (data[i] != "") {
+                        forEditor = forEditor + data[i] + "\n";
+                    }
+                }
+                mainEditor.setValue(forEditor.substr(0, forEditor.length - 1));
+            }
+
+            function saveToFile() {
+                var typedArray = mainEditor.getValue();
+                var blob = new Blob([typedArray], {
+                    type: 'text/plain'
+                });
+                // pass a useful mime type here
+                var url = URL.createObjectURL(blob);
+                //alert(url);
+                $("body").append('<a id="downloadAnchor" href="' + url + '" download="bonsai.txt"></a>');
+                $('#downloadAnchor').get(0).click();
+            }
+
+            function addData() {
+                datensatzIndex++;
+                var toAppend = '<span onclick="changeVal(this);" id="data_' + datensatzIndex.toString() + '" class="flow-text datensatzelement" style="cursor:pointer;"><i id="data_' + datensatzIndex.toString() + '_ad">' + datensatzIndex.toString() + '</i> : <b id="data_' + datensatzIndex.toString() + '_val">0</b></span><br>';
+                $("#datensatz").append(toAppend);
+            }
+
+            function changeVal(element) {
+                //Modal Text ändern
+                $("#m1_text").html($("#" + element.id + "_ad").html());
+                $("#m1_input").val($("#" + element.id + "_val").html());
+                $('#modal1').modal('open');
+                $("#m1_input").focus();
+            }
+            $("#m1_input").keypress(function(e) {
+                if (e.which == 13) {
+                    writeVal();
+                }
+            });
+
+            function writeVal() {
+                var enteredNumber = $("#m1_input").val();
+                if (!isNaN(enteredNumber)) {
+                    enteredNumber = parseInt(enteredNumber);
+                    if (enteredNumber < 256 && enteredNumber >= 0) {
+                        $("#data_" + $("#m1_text").html() + "_val").html(enteredNumber);
+                        $("#modal1").modal("close");
+                    }
+                }
+            }
+
+            function btnRun() {
+                if (mainProg.toString() == mainEditor.getValue().split("\n").toString()) {
+                    compileProg(true);
+                } else {
+                    $("#btn_compile").addClass("animated shake");
+                    setTimeout(function() {
+                        $("#btn_compile").removeClass("animated shake");
+                    }, 1500);
+                }
+            }
+
+            function btnAssemble() {
+                if (mainProg.toString() == mainEditor.getValue().split("\n").toString()) {
+                    assemble();
+                } else {
+                    $("#btn_compile").addClass("animated shake");
+                    setTimeout(function() {
+                        $("#btn_compile").removeClass("animated shake");
+                    }, 1500);
+                }
+            }
+
+            function compileProg(alsoStart) {
+                mainProg = mainEditor.getValue().split("\n");
+                var tempProg = [];
+                var excep = false;
+                var datensatzAnzahl = $(".datensatzelement").length;
+                for (var i = 0; i < mainProg.length; i++) {
+                    tempProg[i] = mainProg[i].split(" ");
+                    if (tempProg[i].length != 2) {
+                        excep = exception(i, "Genau zwei Argumente benötigt");
+                    }
+                    if ($.inArray(tempProg[i][0], befehle) === -1) {
+                        excep = exception(i, "Ungültige Anweisung");
+                    }
+                    if (isNaN(tempProg[i][1])) {
+                        excep = exception(i, "Das zweite Argument muss eine Zahl sein");
+                    }
+                    if (tempProg[i][1] < 0) {
+                        excep = exception(i, "Der Speicherplatz mit der angegebenen Adresse existiert nicht");
+                    }
+                    switch (tempProg[i][0]) {
+                        case "inc":
+                        case "dec":
+                        case "tst":
+                            if (tempProg[i][1] >= datensatzAnzahl) {
+                                excep = exception(i, "Der Speicherplatz mit der angegebenen Adresse existiert nicht");
+                            }
+                            break;
+                        case "jmp":
+                            if (tempProg[i][1] >= mainProg.length) {
+                                excep = exception(i, "Es existiert kein Befehl mit dem angegebenen Index");
+                            }
+                            break;
+                        default:
+                            excep = exception(i, "Unbekannter Fehler!!!");
+                    }
+                    if (excep) {
+                        break;
+                    }
+
+                }
+                if (excep) {
+                    return false;
+                }
+                prog = tempProg;
+                if (alsoStart) {
+                    runProg();
+                } else {
+                    $("#compilerState").html("Kompilieren abgeschlossen<br>Keine Fehler gefunden")
+                    $("#compilerState").removeClass("red-text");
+                    $("#compilerState").addClass("green-text");
+                    $("#btn_run").removeClass("grey");
+                    $("#btn_run").addClass("green");
+                    $("#btn_assemble").removeClass("grey");
+                    $("#btn_assemble").addClass("red");
+
+                }
+            }
+
+            function runProg() {
+                running = true;
+                progIndex = 0;
+                var delay = $("#range_speed").val();
+                var mainInterval = setInterval(function() {
+                    if (!execNextCommand()) {
+                        if (progIndex === -1) {
+                            $("#compilerState").html("Programm beendet!");
+                            $("#compilerState").removeClass("red-text");
+                            $("#compilerState").addClass("green-text");
+                        }
+                        clearInterval(mainInterval);
+                    }
+                }, delay);
+
+
+
+
+            }
+
+
+
+            function execNextCommand() {
+                $("#compilerState").html("Wird ausgef&uuml;hrt...<br>Zeile " + progIndex);
+                $("#compilerState").removeClass("red-text");
+                $("#compilerState").addClass("green-text");
+
+
+
+
+                if (progIndex >= prog.length) {
+                    runtimeException(progIndex, "Laufindex außerhalb des Befehlsbereiches.\n(Erinnerung: 'hlt' wird durch 'jmp' auf sich selber ersetzt!)");
+                    running = false;
+                    return false;
+                }
+                if (prog[progIndex][0] == "inc") {
+                    incData(prog[progIndex][1]);
+
+                } else if (prog[progIndex][0] == "dec") {
+                    if (decData(prog[progIndex][1]) === false) {
+                        runtimeException(progIndex, "Der Wert eines Speicherplatzes darf nicht negativ werden")
+                    }
+                } else if (prog[progIndex][0] == "jmp") {
+                    if (prog[progIndex][1] == progIndex) {
+                        progIndex = -1;
+                        running = false;
+                        return false;
+                    } else {
+                        progIndex = prog[progIndex][1] - 1;
+                    }
+                } else if (prog[progIndex][0] == "tst") {
+                    if (!testData(prog[progIndex][1])) {
+                        progIndex++;
+                    }
+                }
+
+                progIndex++;
+                return true;
+            }
+
+            function incData(adresse) {
+                var val = parseInt($("#data_" + adresse + "_val").html());
+                if (val == 255) {
+                    return false;
+                }
+                $("#data_" + adresse + "_val").html(val + 1);
+                return true;
+            }
+
+            function decData(adresse) {
+                var val = parseInt($("#data_" + adresse + "_val").html());
+                if (val < 1) {
+                    return false;
+                }
+                $("#data_" + adresse + "_val").html(val - 1);
+                return true;
+            }
+
+            function testData(adresse) {
+                var val = parseInt($("#data_" + adresse + "_val").html());
+                return (val !== 0);
+            }
+
+            function assemble() {
+                mycode = mainEditor.getValue().split("\n");
+
+                assembledCode = [];
+                for (var i = 0; i < mycode.length; i++) {
+                    befehl = mycode[i].split(" ");
+                    var front = "00";
+                    var back = "0000";
+                    if (befehl[0] == "inc") {
+                        front = "00";
+                        if (befehl[1] + mycode.length < 64 && befehl[1] >= 0) {
+                            back = dec2bin(befehl[1] + mycode.length);
+                            while (back.length < 6) {
+                                back = "0" + back;
+                            }
+                        } else {
+                            assemblingError();
+                        }
+                    } else if (befehl[0] == "dec") {
+                        front = "01";
+                        if (befehl[1] + mycode.length < 64 && befehl[1] >= 0) {
+                            back = dec2bin(befehl[1] + mycode.length);
+                            while (back.length < 6) {
+                                back = "0" + back;
+                            }
+                        } else {
+                            assemblingError();
+                        }
+                    } else if (befehl[0] == "jmp") {
+                        front = "10";
+                        if (befehl[1] < mycode.length && befehl[1] >= 0) {
+                            back = dec2bin(befehl[1]);
+                            while (back.length < 6) {
+                                back = "0" + back;
+                            }
+                        } else {
+                            assemblingError();
+                        }
+                    } else if (befehl[0] == "tst") {
+                        front = "11";
+                        if (befehl[1] + mycode.length < 64 && befehl[1] >= 0) {
+                            back = dec2bin(befehl[1] + mycode.length);
+                            while (back.length < 6) {
+                                back = "0" + back;
+                            }
+                        } else {
+                            assemblingError();
+                        }
+                    } else {
+                        assemblingError();
+                    }
+
+                    assembledCode.push(front + back);
+                }
+                for (var i = 0; i < $(".datensatzelement").length; i++) {
+                    var val = parseInt($("#data_" + i + "_val").html());
+                    var inhalt = dec2bin(val);
+                    while (inhalt.length < 8) {
+                        inhalt = "0" + inhalt;
+                    }
+
+                    assembledCode.push(inhalt);
+                }
+                var maske = '<h3>Maschinencode:</h3>'
+                maske = maske + '<p style="font-size:15px;">';
+                for (var i = 0; i < assembledCode.length; i++) {
+                    maske = maske + assembledCode[i] + "<br>";
+                }
+                maske = maske + '</p><p class="flow-text">Code Schritt f&uuml;r Schritt mit dem Eingabehelfer eingeben:</p>'
+                assembledCodeIndex++;
+                $("#showAssemblerStep").html(maske); //Paste awsome code here! ;-)
+                $("#modal2").modal("open");
+
+
+            }
+
+            function assembleNextStep() {
+                var endeBefehle = mainEditor.getValue().split("\n").length - 1;
+                var aus = ' <svg height="30" width="30"><circle cx="15" cy="15" r="13" stroke="white" stroke-width="3" fill-opacity="0" /></svg>';
+                var an = ' <svg height="30" width="30"><circle cx="15" cy="15" r="14" fill="white" /></svg>';
+                var maske = '<p style="margin-top:0px;" class="flow-text">';
+
+                if (assembledCodeIndex > endeBefehle) {
+                    maske = maske + 'Eingabe des Wertes';
+                } else {
+                    maske = maske + 'Eingabe des Befehles';
+                }
+                maske = maske + "</p>";
+                var currentCommand = assembledCode[assembledCodeIndex];
+                for (var i = 0; i < currentCommand.length; i++) {
+                    if (currentCommand.substr(i, 1) == "0") {
+                        maske = maske + aus;
+                    } else if (currentCommand.substr(i, 1) == "1") {
+                        maske = maske + an;
+                    }
+                }
+                maske = maske + '<p class="flow-text">' + currentCommand + ' (';
+                if (assembledCodeIndex > endeBefehle) {
+                    maske = maske + parseInt(currentCommand, 2);
+                } else {
+                    maske = maske + binCommandToCommand(currentCommand);
+                }
+                maske = maske + ')<br>in den Speicher mit der Adresse</p>';
+
+                speicherplatz = dec2bin(assembledCodeIndex);
+                while (speicherplatz.length < 8) {
+                    speicherplatz = "0" + speicherplatz;
+                }
+                for (var i = 0; i < speicherplatz.length; i++) {
+                    if (speicherplatz.substr(i, 1) == "0") {
+                        maske = maske + aus;
+                    } else if (speicherplatz.substr(i, 1) == "1") {
+                        maske = maske + an;
+                    }
+                }
+                maske = maske + '<p class="flow-text" style="margin-bottom:0px;">' + speicherplatz + ' (' + assembledCodeIndex + ')</p>'
+
+
+                $("#showAssemblerStep").html(maske);
+                assembledCodeIndex++;
+
+            }
+
+            function binCommandToCommand(binCommand) {
+                var cmd = binCommand.substr(0, 2);
+                var par = binCommand.substr(2, 6);
+                if (cmd == "00") {
+                    cmd = "inc";
+                } else if (cmd == "01") {
+                    cmd = "dec";
+                } else if (cmd == "10") {
+                    cmd = "jmp";
+                } else if (cmd == "11") {
+                    cmd = "tst";
+                }
+                par = parseInt(par, 2);
+                return cmd + " " + par;
+            }
+
+            function exception(line, ex) {
+                //alert("Es wurde ein Fehler in Zeile " + line.toString() + " gefunden:\n" + ex);
+                $("#compilerState").html("Fehler in Zeile " + line.toString() + ":<br>" + ex)
+                $("#compilerState").removeClass("green-text");
+                $("#compilerState").addClass("red-text");
+                return true;
+            }
+
+            function runtimeException(line, ex) {
+                alert("Während der Laufzeit ist beim Abarbeiten von Zeile " + line.toString() + " ein Fehler aufgetreten:\n" + ex);
+                return true;
+            }
+
+            function dec2bin(dec) {
+                return (dec >>> 0).toString(2);
+            }
+
+            var animationOptions = [{
+                selector: '#mainWebApp',
+                offset: 300,
+                callback: function() {
+                    $(".card-panel").css("visibility", "visible");
+                    $(".card-panel").addClass("animated flipInY");
+                }
+            }];
+
+            Materialize.scrollFire(animationOptions);
+        </script>
+    </body>
+
+</html>
